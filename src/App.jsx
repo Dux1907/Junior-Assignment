@@ -1,53 +1,44 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import MovieCard from "./assets/MovieCard";
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  QueryClient,
-  QueryClientProvider,
-} from "react-query";
-const queryClient = new QueryClient();
+import axios from "axios";
+import { useQuery } from "react-query";
+
 const App = () => {
-  const [data, setData] = useState([]);
   const [val, setVal] = useState("");
-  const [characters, setCharacters] = useState([]);
   const hash = import.meta.env.REACT_APP_HASH;
-  useEffect(() => {
-    const fetchCharacters = async () => {
-      try {
-        let response = await fetch(
-          "https://gateway.marvel.com:443/v1/public/characters?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
-        );
-        if (!response.ok) throw new Error("Unable to fetch!");
-        const marvelCharacters = await response.json();
-        console.log(marvelCharacters);
-        setCharacters(marvelCharacters);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchCharacters();
-  }, []);
 
-  const handleSearch = async () => {
-    try {
-      let response = await fetch(
-        "https://gateway.marvel.com:443/v1/public/comics?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
-      );
-
-      if (!response.ok) throw new Error("Unable to fetch!");
-      const marvelInfo = await response.json();
-      console.log(marvelInfo);
-      setData(marvelInfo);
-    } catch (error) {
-      console.log(error);
-    }
+  useEffect(() => {}, []);
+  const fetchCharacters = async () => {
+    return  await axios.get(
+      "https://gateway.marvel.com:443/v1/public/characters?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
+    );
   };
+  const response= useQuery("characters", fetchCharacters);
+  
+    const fetchComics = async () => {
+      return  await axios.get(
+        'https://gateway.marvel.com:443/v1/public/comics?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33'
+      );
+    };
 
+    const handleSearch = () =>{
+      refetch()
+    }
+    const {isLoading,data,refetch}  = useQuery("comics", fetchComics);
+    console.log(data)
+       // const handleSearch = () =>{
+    //   refetch()
+    // }
+    // const Search = async () => {
+    //   return  await axios.get(
+    //     `https://gateway.marvel.com:443/v1/public/comics?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33`
+    //   );
+    // };
+    //  const searchQuery = useQuery("search", Search);
+    //  console.log(searchQuery)
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       <nav className="navbar navbar-expand-sm p-0">
         <div className="container-fluid navbar">
           <a className="navbar-brand" href="#">
@@ -63,7 +54,7 @@ const App = () => {
                 value={val}
                 onChange={(e) => setVal(e.target.val)}
               />
-              <button className="btn btn-outline-dark" onClick={handleSearch}>
+              <button className="btn btn-outline-dark" onClick = {handleSearch}>
                 Search
               </button>
             </div>
@@ -73,9 +64,9 @@ const App = () => {
       <div id="carouselExample" className="carousel slide">
         <div className="carousel-inner">
           <div className="carousel-item active">
-            {characters?.data?.results ? (
+            {response?.data?.data?.data?.results ? (
               <>
-                {characters.data.results.map((user, _index) => {
+                {response.data.data.data.results.map((user, _index) => {
                   return (
                     <>
                       <img
@@ -124,23 +115,32 @@ const App = () => {
           <span className="visually-hidden">Next</span>
         </button>
       </div>
-      {data?.data?.results ? (
-        <>
-          <h2 className="d-flex justify-content-center">Comics</h2>
-          <div className="container-fluid">
-            <div className="row justify-content-center text-center ">
-              {data.data.results.map((user, index) => {
-                return <MovieCard key={index} user={user} />;
-              })}
+      
+      <>
+    {isLoading ? (
+      <h2 className="d-flex justify-content-center">Loading...</h2>
+    ) : (
+      <>
+        {data?.data?.data?.results ? (
+          <>
+            <h2 className="d-flex justify-content-center">Comics</h2>
+            <div className="container-fluid">
+              <div className="row justify-content-center text-center ">
+                {data.data.data.results.map((user, index) => (
+                  <MovieCard key={index} user={user} />
+                ))}
+              </div>
             </div>
+          </>
+        ) : (
+          <div className="error">
+            <h3>{data?.error}</h3>
           </div>
-        </>
-      ) : (
-        <div className="error">
-          <h3>{data?.error}</h3>
-        </div>
-      )}
-    </QueryClientProvider>
+        )}
+      </>
+    )}
+  </>
+    </>
   );
 };
 

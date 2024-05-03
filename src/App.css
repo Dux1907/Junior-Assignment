@@ -7,3 +7,20 @@
   height:40px !important;
   width:auto !important
 }
+
+
+/* // fetch()
+// const fetchCharacters = async () => {
+//   try {
+//     let response = await fetch(
+//       "https://gateway.marvel.com:443/v1/public/characters?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
+//     );
+//     if (!response.ok) throw new Error("Unable to fetch!");
+//     const marvelCharacters = await response.json();
+//     console.log(marvelCharacters);
+//     setCharacters(marvelCharacters);
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
+// fetchCharacters(); */
