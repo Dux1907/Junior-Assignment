@@ -10,33 +10,36 @@ const App = () => {
 
   useEffect(() => {}, []);
   const fetchCharacters = async () => {
-    return  await axios.get(
+    return await axios.get(
       "https://gateway.marvel.com:443/v1/public/characters?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
     );
   };
-  const response= useQuery("characters", fetchCharacters);
-  
-    const fetchComics = async () => {
-      return  await axios.get(
-        'https://gateway.marvel.com:443/v1/public/comics?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33'
-      );
-    };
+  const response = useQuery("characters", fetchCharacters);
 
-    const handleSearch = () =>{
-      refetch()
-    }
-    const {isLoading,data,refetch}  = useQuery("comics", fetchComics);
-    console.log(data)
-       // const handleSearch = () =>{
-    //   refetch()
-    // }
-    // const Search = async () => {
-    //   return  await axios.get(
-    //     `https://gateway.marvel.com:443/v1/public/comics?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33`
-    //   );
-    // };
-    //  const searchQuery = useQuery("search", Search);
-    //  console.log(searchQuery)
+  const fetchComics = async () => {
+    return await axios.get(
+      "https://gateway.marvel.com:443/v1/public/comics?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
+    );
+  };
+
+  let { isLoading, data } = useQuery("comics", fetchComics);
+  // console.log(data);
+  const handleSearch = () => {
+    refetch();
+ 
+  };
+  const Search = async () => {
+    console.log(val)
+    let a =  await axios.get(
+      `https://gateway.marvel.com:443/v1/public/comics?title=${val}&ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33`
+    );
+    setVal('')
+    return a
+  };
+  const {data:dataFetched,refetch} = useQuery("search", Search,{manual:true,enabled:false});
+  console.log(dataFetched)
+  
+
   return (
     <>
       <nav className="navbar navbar-expand-sm p-0">
@@ -52,9 +55,9 @@ const App = () => {
                 placeholder="Search for comics..."
                 aria-label="Search"
                 value={val}
-                onChange={(e) => setVal(e.target.val)}
+                onChange={(e) => setVal(e.target.value)}
               />
-              <button className="btn btn-outline-dark" onClick = {handleSearch}>
+              <button className="btn btn-outline-dark" onClick={handleSearch}>
                 Search
               </button>
             </div>
@@ -115,31 +118,31 @@ const App = () => {
           <span className="visually-hidden">Next</span>
         </button>
       </div>
-      
+
       <>
-    {isLoading ? (
-      <h2 className="d-flex justify-content-center">Loading...</h2>
-    ) : (
-      <>
-        {data?.data?.data?.results ? (
-          <>
-            <h2 className="d-flex justify-content-center">Comics</h2>
-            <div className="container-fluid">
-              <div className="row justify-content-center text-center ">
-                {data.data.data.results.map((user, index) => (
-                  <MovieCard key={index} user={user} />
-                ))}
-              </div>
-            </div>
-          </>
+        {isLoading ? (
+          <h2 className="d-flex justify-content-center">Loading...</h2>
         ) : (
-          <div className="error">
-            <h3>{data?.error}</h3>
-          </div>
+          <>
+            {data?.data?.data?.results ? (
+              <>
+                <h2 className="d-flex justify-content-center">Comics</h2>
+                <div className="container-fluid">
+                  <div className="row justify-content-center text-center ">
+                    {data.data.data.results.map((user, index) => (
+                      <MovieCard key={index} user={user} />
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="error">
+                <h3>{data?.error}</h3>
+              </div>
+            )}
+          </>
         )}
       </>
-    )}
-  </>
     </>
   );
 };
