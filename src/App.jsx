@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import MovieCard from "./assets/MovieCard";
 import axios from "axios";
+import { Pagination } from "@mui/material";
 import { useQuery } from "react-query";
 
 const App = () => {
@@ -10,39 +11,47 @@ const App = () => {
   const hash = import.meta.env.REACT_APP_HASH;
   const fetchCharacters = async () => {
     return await axios.get(
-      "https://gateway.marvel.com:443/v1/public/characters?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
+      "https://gateway.marvel.com:443/v1/public/characters?&ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
     );
   };
   const response = useQuery("characters", fetchCharacters);
 
   const fetchComics = async () => {
     return await axios.get(
-      "https://gateway.marvel.com:443/v1/public/comics?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
+      "https://gateway.marvel.com:443/v1/public/comics?limit=100&ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
     );
   };
 
   let { isLoading, data } = useQuery("comics", fetchComics);
-   console.log(data);
-  
+  console.log(data);
+
   const Search = async () => {
-    let a =  await axios.get(
-      `https://gateway.marvel.com:443/v1/public/comics?titleStartsWith=${val}&ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33`
+    let a = await axios.get(
+      `https://gateway.marvel.com:443/v1/public/comics?limit=100&titleStartsWith=${val}&ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33`
     );
-    setVal('')
-    return a
+    setVal("");
+    return a;
   };
-  
-    const {data:dataFetched,refetch} = useQuery("search", Search,{manual:true,enabled:false});
-    if(dataFetched)
-    data = dataFetched
-  
+
+  const { data: dataFetched, refetch } = useQuery("search", Search, {
+    manual: true,
+    enabled: false,
+  });
+  if (dataFetched) data = dataFetched;
+
   const handleSearch = () => {
     refetch();
   };
 
-  
-  // console.log(dataFetched)
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const totalPages = 5;
+  const handlePageChange = (e, p) => {
+    setCurrentPage(p);
+  };
+
   return (
     <>
       <nav className="navbar navbar-expand-sm p-0">
@@ -127,24 +136,45 @@ const App = () => {
           <h2 className="d-flex justify-content-center">Loading...</h2>
         ) : (
           <>
-            { data?.data?.data?.results && data?.data?.data?.results.length > 0 ? (
+            {data?.data?.data?.results &&
+            data?.data?.data?.results.length > 0 ? (
               <>
                 <h2 className="d-flex justify-content-center">Comics</h2>
                 <div className="container-fluid">
                   <div className="row justify-content-center text-center ">
-                    {data.data.data.results.map((user, index) => (
-                      <MovieCard key={index} user={user} />
-                    ))}
+                    {data &&
+                      data.data.data.results.map((user, index) => {
+                        if (index >= startIndex && index < endIndex) {
+                          return <MovieCard key={index} user={user} />;
+                        }
+                        return null;
+                      })}
                   </div>
                 </div>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  color="primary"
+                  variant="outlined"
+                  shape="rounded"
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "2rem",
+                  }}
+                />
               </>
-            ) : ( data?.data?.data?.results && data?.data?.data?.results.length == 0 ? (
-              <h2 className="d-flex justify-content-center mt-5">No Comics Found</h2>
+            ) : data?.data?.data?.results &&
+              data?.data?.data?.results.length == 0 ? (
+              <h2 className="d-flex justify-content-center mt-5">
+                No Comics Found
+              </h2>
             ) : (
               <div className="error">
                 <h3>{data?.error}</h3>
               </div>
-            ))}
+            )}
           </>
         )}
       </>
