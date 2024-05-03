@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import "./App.css";
 import MovieCard from "./assets/MovieCard";
@@ -7,8 +8,6 @@ import { useQuery } from "react-query";
 const App = () => {
   const [val, setVal] = useState("");
   const hash = import.meta.env.REACT_APP_HASH;
-
-  useEffect(() => {}, []);
   const fetchCharacters = async () => {
     return await axios.get(
       "https://gateway.marvel.com:443/v1/public/characters?ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
@@ -23,23 +22,27 @@ const App = () => {
   };
 
   let { isLoading, data } = useQuery("comics", fetchComics);
-  // console.log(data);
-  const handleSearch = () => {
-    refetch();
- 
-  };
+   console.log(data);
+  
   const Search = async () => {
-    console.log(val)
     let a =  await axios.get(
-      `https://gateway.marvel.com:443/v1/public/comics?title=${val}&ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33`
+      `https://gateway.marvel.com:443/v1/public/comics?titleStartsWith=${val}&ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33`
     );
     setVal('')
     return a
   };
-  const {data:dataFetched,refetch} = useQuery("search", Search,{manual:true,enabled:false});
-  console.log(dataFetched)
   
+    const {data:dataFetched,refetch} = useQuery("search", Search,{manual:true,enabled:false});
+    if(dataFetched)
+    data = dataFetched
+  
+  const handleSearch = () => {
+    refetch();
+  };
 
+  
+  // console.log(dataFetched)
+  
   return (
     <>
       <nav className="navbar navbar-expand-sm p-0">
@@ -124,7 +127,7 @@ const App = () => {
           <h2 className="d-flex justify-content-center">Loading...</h2>
         ) : (
           <>
-            {data?.data?.data?.results ? (
+            { data?.data?.data?.results && data?.data?.data?.results.length > 0 ? (
               <>
                 <h2 className="d-flex justify-content-center">Comics</h2>
                 <div className="container-fluid">
@@ -135,11 +138,13 @@ const App = () => {
                   </div>
                 </div>
               </>
+            ) : ( data?.data?.data?.results && data?.data?.data?.results.length == 0 ? (
+              <h2 className="d-flex justify-content-center mt-5">No Comics Found</h2>
             ) : (
               <div className="error">
                 <h3>{data?.error}</h3>
               </div>
-            )}
+            ))}
           </>
         )}
       </>
