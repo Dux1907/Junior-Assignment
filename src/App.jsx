@@ -8,6 +8,9 @@ import { useQuery } from "react-query";
 
 const App = () => {
   const [val, setVal] = useState("");
+  const [search, setSearch] = useState(val);
+  const [charIds, setCharIds] = useState([]);
+  const[data, setData] = useState('')
   const hash = import.meta.env.REACT_APP_HASH;
   const fetchCharacters = async () => {
     return await axios.get(
@@ -16,30 +19,46 @@ const App = () => {
   };
   const response = useQuery("characters", fetchCharacters);
 
-  const fetchComics = async () => {
-    return await axios.get(
-      "https://gateway.marvel.com:443/v1/public/comics?limit=100&ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33"
-    );
-  };
+  
 
-  let { isLoading, data } = useQuery("comics", fetchComics);
-  console.log(data);
+  const params = {
+    limit: 100,
+    ts: 1714646378085,
+    apikey: 'b8b73866993c9c0a583e2a4bf94281e0',
+    hash: '6cdc7b145d5292c26954d652742cff33'
+};
 
+if (search != "")
+  params.titleStartsWith = search;
+
+if (charIds.length > 0) {
+  params.characters = charIds;
+}
   const Search = async () => {
-    let a = await axios.get(
-      `https://gateway.marvel.com:443/v1/public/comics?limit=100&titleStartsWith=${val}&ts=1714646378085&apikey=b8b73866993c9c0a583e2a4bf94281e0&hash=6cdc7b145d5292c26954d652742cff33`
-    );
-    setVal("");
-    return a;
+    try {
+      const response = await axios.get(
+          `https://gateway.marvel.com:443/v1/public/comics`,
+          {
+              params: params
+          }
+      );
+      setVal("");
+      console.log('res', response)
+      return response.data;
+  } catch (error) {
+      console.error('Error fetching comics:', error);
+      throw error;
+  }
   };
 
-  const { data: dataFetched, refetch } = useQuery("search", Search, {
-    manual: true,
-    enabled: false,
-  });
-  if (dataFetched) data = dataFetched;
+  
+  const { isLoading, data: dataFetched } = useQuery(["search", charIds, search], Search);
 
+  useEffect(()=>{setData(dataFetched)}
+  ,[dataFetched]
+  )
   const handleSearch = () => {
+    setSearch(val)
     refetch();
   };
 
@@ -92,6 +111,7 @@ const App = () => {
                           borderRadius: "50%",
                         }}
                         className="img-fluid"
+                        onClick={()=>{console.log('clicked------>>',data, charIds); setCharIds([...charIds, user.id])}}
                       />
                     </>
                   );
@@ -136,14 +156,14 @@ const App = () => {
           <h2 className="d-flex justify-content-center">Loading...</h2>
         ) : (
           <>
-            {data?.data?.data?.results &&
-            data?.data?.data?.results.length > 0 ? (
+            {data?.data?.results &&
+            data?.data?.results.length > 0 ? (
               <>
                 <h2 className="d-flex justify-content-center">Comics</h2>
                 <div className="container-fluid">
                   <div className="row justify-content-center text-center ">
                     {data &&
-                      data.data.data.results.map((user, index) => {
+                      data.data.results.map((user, index) => {
                         if (index >= startIndex && index < endIndex) {
                           return <MovieCard key={index} user={user} />;
                         }
@@ -165,8 +185,8 @@ const App = () => {
                   }}
                 />
               </>
-            ) : data?.data?.data?.results &&
-              data?.data?.data?.results.length == 0 ? (
+            ) : data?.data?.results &&
+              data?.data?.results.length == 0 ? (
               <h2 className="d-flex justify-content-center mt-5">
                 No Comics Found
               </h2>
